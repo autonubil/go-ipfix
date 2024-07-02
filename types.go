@@ -194,7 +194,7 @@ func (t Type) String() string {
 	return "unknownType"
 }
 
-//Seconds between NTP and Unix epoch
+// Seconds between NTP and Unix epoch
 const ntp2Unix uint32 = 0x83AA7E80
 
 func (t Type) serializeDataTo(buffer scratchBuffer, value interface{}, length int) (int, error) {

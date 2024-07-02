@@ -45,9 +45,11 @@ func MakeIEFromSpec(spec []byte) (InformationElement, error) {
 }
 
 var informationElementRegistry map[string]InformationElement
+var enterpriseElementRegistry map[uint32]map[uint16]InformationElement
 
 func init() {
 	informationElementRegistry = make(map[string]InformationElement)
+	enterpriseElementRegistry = make(map[uint32]map[uint16]InformationElement)
 }
 
 // RegisterInformationElement registers the given InformationElement. This can later be queried by name with GetInformationElement.
@@ -56,7 +58,30 @@ func RegisterInformationElement(x InformationElement) error {
 		return fmt.Errorf("ipfix: Information element with name '%s' already registered", x.Name)
 	}
 	informationElementRegistry[x.Name] = x
+	var enterpriseElements map[uint16]InformationElement
+	var ok bool
+	if enterpriseElements, ok = enterpriseElementRegistry[x.Pen]; !ok {
+		enterpriseElements = make(map[uint16]InformationElement)
+		enterpriseElementRegistry[x.Pen] = enterpriseElements
+	}
+	enterpriseElements[x.ID] = x
 	return nil
+}
+
+// ResolveInformationElement retrieves an InformationElement by pen and id
+func ResolveInformationElement(pen uint32, id uint16) (ret InformationElement, err error) {
+	var enterpriseElements map[uint16]InformationElement
+	var ok bool
+	if enterpriseElements, ok = enterpriseElementRegistry[pen]; !ok {
+		err = fmt.Errorf("ipfix: No enterprise with id '%d' registered", pen)
+		return
+	}
+
+	if ret, ok = enterpriseElements[id]; !ok {
+		err = fmt.Errorf("ipfix: No element with id '%d' registered enterprise with id '%d' ", id, pen)
+		return
+	}
+	return
 }
 
 // GetInformationElement retrieves an InformationElement by name.
