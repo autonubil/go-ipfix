@@ -51,5 +51,9 @@ func (t template) assignDataRecord(record *recordBuffer, values ...interface{}) 
 			return err
 		}
 	}
+	padding := (4 - (record.length() % 4)) % 4
+	if padding > 0 {
+		record.append(padding)
+	}
 	return nil
 }
